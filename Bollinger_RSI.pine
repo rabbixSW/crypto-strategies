@@ -1,11 +1,6 @@
 //@version=5
 strategy("RSI Strategy w/ Bollinger Bands", overlay=true)
 
-//Inputs - Length
-input_imacd = input(34, "Length", group = "IMACD")
-input_imacd_sma = input(9, "SMA", group = "IMACD")
-input_imacd_threshold = input(0.1, "Threshold", group = "IMACD")
-
 input_rsi = input(14, "Length", group = "RSI")
 input_rsi_overbought = input(70, "Overbought", group = "RSI")
 input_rsi_oversold = input(30, "Oversold", group = "RSI")
@@ -58,41 +53,9 @@ input_take_profit = input(
 
 //Indicator values
 rsi_value = ta.rsi(hlc3, input_rsi)
-
 [middle_bb, upper_bb, lower_bb] = ta.bb(close, input_bb, input_bb_multi)
 
-calc_smma(float before, float src, int length) =>
-  na(before) ? ta.sma(src, length) : (before * (length - 1) + src) / length
-
-calc_zlema(float src, int length) =>
-	ema1 = ta.ema(src, length)
-	ema2 = ta.ema(ema1, length)
-	diff = ema1 - ema2
-	ema1 + diff
-
-var imacd_hi = float(na)
-imacd_hi := calc_smma(imacd_hi[1], high, input_imacd)
-
-var imacd_lo = float(na)
-imacd_lo := calc_smma(imacd_lo[1], low, input_imacd)
-
-var imacd_mi = float(na)
-imacd_mi := calc_zlema(hlc3, input_imacd)
-
-imacd_value = (imacd_mi > imacd_hi) ? (imacd_mi - imacd_hi) : (imacd_mi < imacd_lo) ? (imacd_mi - imacd_lo) : 0
-imacd_SMA = ta.sma(imacd_value, input_imacd_sma)
-imacd_history = imacd_value - imacd_SMA
-
-//Strategy values
-imacd_buy = ta.crossover(imacd_value, imacd_SMA)
-imacd_sell = ta.crossunder(imacd_value, imacd_SMA)
-
-//var rsi_buy = false
-//if(not rsi_buy)
 rsi_buy = ta.crossover(rsi_value, input_rsi_oversold)
-
-//var rsi_sell = false
-//if(not rsi_sell)
 rsi_sell = ta.crossunder(rsi_value, input_rsi_overbought)
 
 bb_buy = ta.crossover(low, lower_bb)
@@ -168,6 +131,3 @@ plot((strategy.position_avg_price * (position_percentage / 100)) * math.abs(stra
   "Position", color.green, 1, 
   display = display.data_window + display.status_line)
 plot(rsi_value, "RSI", color.rgb(255, 100, 0), 1, display = display.data_window + display.status_line)
-plot(imacd_value, "IMACD", color.rgb(255, 130, 230), 1, display = display.data_window + display.status_line)
-plot(imacd_SMA, "IMACD - SMA", color.rgb(168, 30, 255), 1, display = display.data_window + display.status_line)
-plot(imacd_history, "IMACD - History", color.rgb(50, 128, 128, 50), 1, display = display.data_window + display.status_line)
